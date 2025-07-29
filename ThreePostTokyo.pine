@@ -1,0 +1,43 @@
+//@version=5
+indicator("Trading Sessions + Tokyo Post-3-Candle Highlighter", overlay=true)
+
+// === SESSION SETTINGS ===
+// Define GMT session hours (24hr format)
+tokyo_start = 0
+tokyo_end   = 9
+
+london_start = 7
+london_end   = 16
+
+newyork_start = 12
+newyork_end   = 21
+
+// === TIME HANDLING ===
+hour_utc   = hour(time, "UTC")
+minute_utc = minute(time, "UTC")
+
+// Session detection
+in_tokyo    = (hour_utc >= tokyo_start and hour_utc < tokyo_end)
+in_london   = (hour_utc >= london_start and hour_utc < london_end)
+in_newyork  = (hour_utc >= newyork_start and hour_utc < newyork_end)
+
+// === BACKGROUND COLORS ===
+bgcolor(in_tokyo ? color.new(color.blue, 85) : na)
+bgcolor(in_london ? color.new(color.rgb(212, 175, 55), 85) : na)  // Goldish color
+bgcolor(in_newyork ? color.new(color.red, 85) : na)
+
+// === POST-TOKYO 3 CANDLES LOGIC ===
+var int last_tokyo_close = na
+if not in_tokyo and hour_utc == tokyo_end and minute_utc == 0
+    last_tokyo_close := time
+
+candles_to_highlight = 3
+post_tokyo = time >= last_tokyo_close and time < (last_tokyo_close + candles_to_highlight * 3600000)
+bgcolor(post_tokyo ? color.new(color.orange, 80) : na)
+
+// === OPTIONAL LABELS ===
+if hour_utc == tokyo_start and minute_utc == 0
+    label.new(bar_index, high, "Tokyo Open", style=label.style_label_up, color=color.blue, textcolor=color.white)
+
+if hour_utc == tokyo_end and minute_utc == 0
+    label.new(bar_index, low, "Tokyo Close", style=label.style_label_down, color=color.orange, textcolor=color.white)
